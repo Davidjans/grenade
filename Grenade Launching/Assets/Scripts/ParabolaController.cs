@@ -4,6 +4,11 @@ using System.Collections.Generic;
 public class ParabolaController : MonoBehaviour
 {
     /// <summary>
+    /// Multiplyer for addforce at the end
+    /// </summary>
+    public float m_EndLaunchMultiplyer;
+
+    /// <summary>
     /// m_Animation m_Speed
     /// </summary>
     public float m_Speed = 1;
@@ -83,6 +88,7 @@ public class ParabolaController : MonoBehaviour
         {
             m_RigidBody = GetComponent<Rigidbody>();
         }
+        InvokeRepeating("SavePos",0,0.5f);
     }
 
     // Update is called once per frame
@@ -116,11 +122,13 @@ public class ParabolaController : MonoBehaviour
         }
         else if (m_Animation && m_ParabolaFly != null && m_AnimationTime > m_ParabolaFly.GetDuration())
         {
+
             m_AnimationTime = float.MaxValue;
+            LaunchInOppositeDirection();
             m_Animation = false;
         }
 
-        m_LastPosition = transform.position;
+        
     }
 
     public void FollowParabola()
@@ -493,12 +501,22 @@ public class ParabolaController : MonoBehaviour
     {
         if (m_Animation == true)
         {
-            m_Animation = false;
-            Vector3 direction = m_LastPosition - transform.position;
-            Debug.DrawRay(transform.position, direction * 1000, Color.yellow, 40);
-            transform.position = m_LastPosition;
-            m_RigidBody.constraints = RigidbodyConstraints.None;
-            m_RigidBody.AddForce(direction * (m_Speed * 1000));
+            LaunchInOppositeDirection();
         }
+    }
+
+    private void SavePos()
+    {
+        m_LastPosition = transform.position;
+    }
+
+    private void LaunchInOppositeDirection()
+    {
+        m_Animation = false;
+        Vector3 direction =  transform.position - m_LastPosition;
+        Debug.DrawRay(transform.position, direction * 1000, Color.yellow, 40);
+        //transform.position = m_LastPosition;
+        m_RigidBody.constraints = RigidbodyConstraints.None;
+        m_RigidBody.AddForce(direction * m_EndLaunchMultiplyer);
     }
 }
