@@ -12,10 +12,19 @@ public class ParabolaRootManager : MonoBehaviour
     public Transform m_TargetParabola;
     [SerializeField] private float m_HeightIncrease = 0.15f;
     [SerializeField] private List<Transform> m_Parabolas;
+    [SerializeField] private GameObject m_Grenade;
+    [SerializeField] private Transform m_Origin;
     private int m_ParabolaNumber = 0;
     private bool m_GettingNewTarget;
     private bool m_CheckingIfGotATarget;
     private Vector3 m_OriginalLocalTargetPosition;
+    private Vector3 m_LeftLocalTargetPosition;
+    private Vector3 m_RightLocalTargetPosition;
+    private List<Vector3> m_LookDirections = new List<Vector3>();
+    // 0 original 1 right, 2 left.
+    private int m_DirectionManager;
+    private ParabolaController m_ParabolaController;
+    [HideInInspector] public Vector3 m_FinalLookRotation;
     
     void Start()
     {
@@ -31,7 +40,7 @@ public class ParabolaRootManager : MonoBehaviour
 
     private void Update()
     {
-        if (m_GettingNewTarget)
+                if (m_GettingNewTarget)
         {
             if (m_CheckingIfGotATarget)
             {
@@ -47,6 +56,22 @@ public class ParabolaRootManager : MonoBehaviour
 
     public void SetTarget()
     {
+        Transform gameObject = GameObject.Find("GrenadeLauncherVisual").transform;
+        Vector3 Direction =   gameObject.position - m_Target.position;
+        gameObject.rotation = Quaternion.LookRotation(Direction);
+        //gameObject.eulerAngles *= -1;
+        if (m_DirectionManager == 0)
+        {
+            m_Target.localPosition = m_OriginalLocalTargetPosition;
+        }
+        else if(m_DirectionManager == 1)
+        {
+            m_Target.localPosition = m_OriginalLocalTargetPosition + (gameObject.right * 1.5f);
+        }
+        else if(m_DirectionManager == 2)
+        {
+            m_Target.localPosition = m_OriginalLocalTargetPosition + ((gameObject.right * -1) * 1.5f );
+        }
         Ray ray;
         RaycastHit hit;
         
@@ -120,6 +145,7 @@ public class ParabolaRootManager : MonoBehaviour
                         if (!Physics.Raycast(ray, distance))
                         {
                             m_AvalibleParabolas.Add(m_Parabolas[m_ParabolaNumber]);
+                            m_LookDirections.Add(betweenPoints[0] - children[1].position);
                         }
                     }
                 }
@@ -138,7 +164,7 @@ public class ParabolaRootManager : MonoBehaviour
         {
             m_CheckingIfGotATarget = true;
             m_ParabolaNumber = 0;
-            m_AvalibleParabolas.Clear();
+            //m_AvalibleParabolas.Clear();
         }
     }
 
@@ -148,12 +174,33 @@ public class ParabolaRootManager : MonoBehaviour
         {
             int random = Random.Range(0, m_AvalibleParabolas.Count);
             m_TargetParabola = m_AvalibleParabolas[random];
+            m_FinalLookRotation = m_LookDirections[random];
             m_GettingNewTarget = false;
+            m_AvalibleParabolas.Clear();
+            m_LookDirections.Clear();
+            GameObject grenade = Instantiate(m_Grenade, m_Origin.position, m_Origin.rotation);
+            m_ParabolaController = grenade.GetComponent<ParabolaController>();
+            m_ParabolaController.m_RootManager = this;
+            m_ParabolaController.Launch();
         }
         else
         {
-            //m_CheckingIfGotATarget = false;
+            m_DirectionManager++;
+            if (m_DirectionManager > 2)
+            {
+                //Debug.Log("Cant get there");
+                m_CheckingIfGotATarget = false;
+                m_GettingNewTarget = false;
+                m_DirectionManager = 0;
+            }
+                
         }
         m_CheckingIfGotATarget = false;
+    }
+
+    public void Shoot()
+    {
+        m_GettingNewTarget = true;
+        m_DirectionManager = 0;
     }
 }

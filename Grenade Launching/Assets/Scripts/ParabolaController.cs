@@ -6,12 +6,12 @@ public class ParabolaController : MonoBehaviour
     /// <summary>
     /// Multiplyer for addforce at the end
     /// </summary>
-    public float m_EndLaunchMultiplyer;
+    public float m_EndLaunchMultiplyer = 40;
 
     /// <summary>
     /// m_Animation m_Speed
     /// </summary>
-    public float m_Speed = 1;
+    public float m_Speed = 15;
 
     /// <summary>
     /// Start of Parabola
@@ -42,9 +42,9 @@ public class ParabolaController : MonoBehaviour
 
     private Vector3 m_LastPosition;
 
-    Rigidbody m_RigidBody;
+    private Rigidbody m_RigidBody;
 
-    [SerializeField] private ParabolaRootManager m_RootManager;
+    [HideInInspector] public ParabolaRootManager m_RootManager;
 
     //void OnDrawGizmos()
     //{
@@ -89,20 +89,13 @@ public class ParabolaController : MonoBehaviour
             m_RigidBody = GetComponent<Rigidbody>();
         }
         InvokeRepeating("SavePos",0,0.5f);
+        
     }
 
     // Update is called once per frame
     void Update()
     {
         m_NextParabola = false;
-        if (Input.GetKey(KeyCode.P))
-        {
-            m_RootManager.SetTarget();
-            m_ParabolaRoot = m_RootManager.m_TargetParabola.gameObject;
-            m_ParabolaFly = new ParabolaFly(m_ParabolaRoot.transform);
-            RefreshTransforms(m_Speed);
-            FollowParabola();
-        }
 
         if (m_Animation && m_ParabolaFly != null && m_AnimationTime < m_ParabolaFly.GetDuration())
         {
@@ -518,5 +511,14 @@ public class ParabolaController : MonoBehaviour
         //transform.position = m_LastPosition;
         m_RigidBody.constraints = RigidbodyConstraints.None;
         m_RigidBody.AddForce(direction * m_EndLaunchMultiplyer);
+    }
+
+    public void Launch()
+    {
+        m_ParabolaRoot = m_RootManager.m_TargetParabola.gameObject;
+        m_ParabolaFly = new ParabolaFly(m_ParabolaRoot.transform);
+        RefreshTransforms(m_Speed);
+        GameObject.Find("GrenadeLauncherVisual").transform.rotation = Quaternion.LookRotation(m_RootManager.m_FinalLookRotation * -1);
+        FollowParabola();
     }
 }

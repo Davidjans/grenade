@@ -4,17 +4,21 @@ using UnityEngine;
 
 public class GrenadeLauncher : MonoBehaviour
 {
-    [SerializeField] private int m_AngleAttempts;
-    [SerializeField] private float m_AngleDifferencePerAttempt;
+    private ParabolaRootManager m_RootManager;
 
-    void Start()
+    private void Start()
     {
-        
+        m_RootManager = GetComponentInChildren<ParabolaRootManager>();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        
+        if (Input.GetKeyDown(KeyCode.P))
+            ShootLauncher();
+    }
+
+    public void ShootLauncher()
+    {
+        m_RootManager.Shoot();
     }
 }
